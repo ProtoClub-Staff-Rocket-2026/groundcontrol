@@ -15,22 +15,26 @@ export default function SettingsModal({ referencePressure, onSave }) {
 
   return (
     <div className="modal-overlay" onClick={() => setOpen(false)}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Settings</h3>
-        <label>
-          Air Pressure Reference (hPa):
+      <div
+        className="modal settings-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h3>Settings</h3>
+        </div>
+        <div className="modal-body">
+          <label>Air Pressure Reference (hPa)</label>
           <input
             type="number"
             step="0.1"
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            autoFocus
           />
-        </label>
-        <div style={{ marginTop: '1rem' }}>
+        </div>
+        <div className="modal-footer">
+          <button onClick={() => setOpen(false)}>Cancel</button>
           <button onClick={handleSave}>Save</button>
-          <button onClick={() => setOpen(false)} style={{ marginLeft: '0.5rem' }}>
-            Cancel
-          </button>
         </div>
       </div>
     </div>

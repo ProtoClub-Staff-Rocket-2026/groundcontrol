@@ -20,14 +20,16 @@ export default function App() {
 
   return (
     <div className="app">
-      <header>
-        <h1>Ground Control</h1>
+      <header className="app-header">
+        <div className="header-brand">
+          <h1>Ground Control</h1>
+        </div>
         <div className="header-actions">
           <SettingsModal referencePressure={referencePressure} onSave={handleSave} />
           <LaunchButton />
         </div>
       </header>
-      <main>
+      <main className="app-main">
         <Dashboard referencePressure={referencePressure} />
       </main>
     </div>
