@@ -1,0 +1,19 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - LAUNCH_PAD_URL=${LAUNCH_PAD_URL:-http://localhost:9000/launch}
+    volumes:
+      - backend-data:/app
+
+  ui:
+    build: ./ui
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend-data:
