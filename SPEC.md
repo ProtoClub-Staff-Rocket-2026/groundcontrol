@@ -8,7 +8,7 @@ The infrastructure is handled via Docker Compose. The backend accepts calls from
 
 Locates in the `ui`-directory.
 
-Only one view: the dashboard for displaying data from the backend `/events`-route. The dashboard shows data from one session at a time, with a dropdown to switch between sessions. The latest session is selected by default.
+Only one view: the dashboard for displaying data from the backend. The dashboard connects via WebSocket for real-time telemetry updates and shows data from one session at a time, with a dropdown to switch between sessions. The latest session is selected by default. A connection status indicator (LIVE/CONNECTING/OFFLINE) and time since last update are shown in the session bar.
 
 A settings modal that has a field for setting the reference value for the air pressure field (calibration purposes, UI only).
 
@@ -79,6 +79,20 @@ Returns the 50 newest events across all sessions.
         "save_datetime": "the server datetime"
     }
 ]
+```
+
+- WS `/ws/events?identifier=<session>`
+
+WebSocket endpoint for real-time telemetry streaming. On connect, sends the latest 50 events as an initial payload:
+
+```json
+{"type": "initial", "data": [{"id": 1, "timestamp": "...", "identifier": "...", "velocity": 12.4, "air_pressure": 100.2, "save_datetime": "..."}]}
+```
+
+When new events are posted for this session, they are pushed to all connected clients:
+
+```json
+{"type": "event", "data": {"id": 2, "timestamp": "...", "identifier": "...", "velocity": 15.1, "air_pressure": 98.7, "save_datetime": "..."}}
 ```
 
 - GET `/commands/launch`

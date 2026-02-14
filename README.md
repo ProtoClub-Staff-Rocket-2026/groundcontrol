@@ -40,7 +40,10 @@ Runs on http://localhost:5173. The Vite dev server proxies `/api` requests to `l
 | POST | `/events/` | Create a telemetry event (returns 204) |
 | GET | `/events/` | Get 50 newest events (optional `?identifier=` filter) |
 | GET | `/events/sessions` | List distinct session identifiers |
+| WS | `/ws/events?identifier=` | WebSocket stream for real-time telemetry events |
 | GET | `/commands/launch` | Send launch signal to launch pad |
+
+The dashboard connects via WebSocket for real-time event streaming. On connect, the server sends the latest 50 events, then pushes new events as they arrive. Sessions list is still fetched via HTTP polling (every 5s).
 
 ### Example: Post a test event
 

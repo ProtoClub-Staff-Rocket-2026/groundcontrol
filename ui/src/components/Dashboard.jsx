@@ -8,9 +8,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { fetchEvents, fetchSessions } from '../api'
+import { fetchSessions, getEventsWsUrl } from '../api'
 
 const BAROMETRIC_SCALE_HEIGHT = 8500
+const RECONNECT_DELAY = 2000
 
 function calcAltitude(pressure, referencePressure) {
   if (!referencePressure || referencePressure <= 0 || pressure <= 0) return null
@@ -89,6 +90,9 @@ export default function Dashboard({ referencePressure }) {
   const [sessions, setSessions] = useState([])
   const [selectedSession, setSelectedSession] = useState(null)
   const [error, setError] = useState(null)
+  const [wsStatus, setWsStatus] = useState('disconnected')
+  const [lastUpdateTime, setLastUpdateTime] = useState(null)
+  const [timeSinceUpdate, setTimeSinceUpdate] = useState(null)
   const prevCountRef = useRef(0)
 
   // Fetch available sessions
@@ -109,21 +113,79 @@ export default function Dashboard({ referencePressure }) {
     return () => clearInterval(id)
   }, [])
 
-  // Fetch events for selected session
+  // WebSocket connection for events
   useEffect(() => {
     if (selectedSession === null) return
-    const poll = () => {
-      fetchEvents(selectedSession)
-        .then((data) => {
-          setEvents(data)
-          setError(null)
-        })
-        .catch((err) => setError(err.message))
+
+    let ws = null
+    let reconnectTimer = null
+    let cancelled = false
+
+    function connect() {
+      if (cancelled) return
+
+      setWsStatus('connecting')
+      ws = new WebSocket(getEventsWsUrl(selectedSession))
+
+      ws.onopen = () => {
+        setWsStatus('connected')
+        setError(null)
+      }
+
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data)
+        setLastUpdateTime(Date.now())
+        if (msg.type === 'initial') {
+          setEvents(msg.data)
+        } else if (msg.type === 'event') {
+          setEvents((prev) => {
+            const next = [msg.data, ...prev]
+            return next.slice(0, 50)
+          })
+        }
+      }
+
+      ws.onclose = () => {
+        setWsStatus('disconnected')
+        if (!cancelled) {
+          reconnectTimer = setTimeout(connect, RECONNECT_DELAY)
+        }
+      }
+
+      ws.onerror = () => {
+        setError('WebSocket connection error')
+        ws.close()
+      }
     }
-    poll()
-    const id = setInterval(poll, 2000)
-    return () => clearInterval(id)
+
+    connect()
+
+    return () => {
+      cancelled = true
+      clearTimeout(reconnectTimer)
+      if (ws) {
+        ws.onclose = null
+        ws.close()
+      }
+      setEvents([])
+      setWsStatus('disconnected')
+      setLastUpdateTime(null)
+      setTimeSinceUpdate(null)
+    }
   }, [selectedSession])
+
+  // Tick every second to update "time since last update"
+  useEffect(() => {
+    if (lastUpdateTime === null) {
+      setTimeSinceUpdate(null)
+      return
+    }
+    setTimeSinceUpdate(Math.floor((Date.now() - lastUpdateTime) / 1000))
+    const id = setInterval(() => {
+      setTimeSinceUpdate(Math.floor((Date.now() - lastUpdateTime) / 1000))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [lastUpdateTime])
 
   const showAltitude = referencePressure > 0
 
@@ -144,6 +206,8 @@ export default function Dashboard({ referencePressure }) {
 
   const visibleCharts = CHARTS.filter((c) => !c.needsRef || showAltitude)
 
+  const statusColor = wsStatus === 'connected' ? '#10b981' : wsStatus === 'connecting' ? '#f59e0b' : '#ef4444'
+
   return (
     <div>
       {error && <div className="error-bar">Connection error: {error}</div>}
@@ -160,6 +224,18 @@ export default function Dashboard({ referencePressure }) {
           ))}
           {sessions.length === 0 && <option value="">No sessions</option>}
         </select>
+        <span
+          className="ws-status"
+          style={{ color: statusColor }}
+          title={wsStatus}
+        >
+          &#9679; {wsStatus === 'connected' ? 'LIVE' : wsStatus === 'connecting' ? 'CONNECTING' : 'OFFLINE'}
+        </span>
+        {timeSinceUpdate !== null && (
+          <span className="ws-last-update">
+            {timeSinceUpdate === 0 ? 'just now' : `${timeSinceUpdate}s ago`}
+          </span>
+        )}
       </div>
 
       {chartData.length > 0 && (

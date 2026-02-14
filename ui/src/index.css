@@ -183,6 +183,22 @@ body {
   border-color: var(--accent-blue);
 }
 
+.ws-status {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-left: auto;
+}
+
+.ws-last-update {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 /* ── Charts ── */
 
 .charts {

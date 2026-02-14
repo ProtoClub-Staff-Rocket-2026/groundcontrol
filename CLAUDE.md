@@ -34,13 +34,16 @@ docker compose up --build                  # UI on :80, backend on :8000
 ## Architecture
 
 - Backend routes have NO `/api` prefix — the proxy layer (Vite dev / nginx prod) strips `/api` before forwarding
-- Frontend polls `GET /events/?identifier=` every 2 seconds, filtered by selected session
+- Frontend connects to `WS /ws/events?identifier=` for real-time telemetry; server sends initial 50 events on connect, then pushes new events as they arrive
+- `POST /events/` returns 204 (no body) and broadcasts the new event to subscribed WebSocket clients via `ConnectionManager`
 - `GET /events/sessions` returns distinct identifiers; frontend polls this every 5 seconds
-- Dashboard auto-selects the latest session, with a dropdown to switch
-- `POST /events/` returns 204 (no body)
+- `GET /events/` REST endpoint kept as fallback
+- Dashboard auto-selects the latest session, with a dropdown to switch; shows WebSocket connection status (LIVE/CONNECTING/OFFLINE) and time since last update
+- WebSocket auto-reconnects on disconnect with 2s delay
 - `GET /commands/launch` proxies to external `LAUNCH_PAD_URL` via httpx
 - SQLite database file: `backend/data.db` (auto-created on startup)
 - Air pressure reference value stored in browser localStorage, used for barometric altitude calculation
+- Vite dev proxy: `/api/ws` with `ws: true` (before `/api`); nginx: `/api/ws/` location with upgrade headers (before `/api/`)
 
 ## UI Design
 
@@ -58,11 +61,11 @@ docker compose up --build                  # UI on :80, backend on :8000
 
 - `backend/app/main.py` — FastAPI app, CORS, lifespan (table creation)
 - `backend/app/models.py` — DataEvent SQLModel
-- `backend/app/routers/events.py` — POST/GET /events/, GET /events/sessions
+- `backend/app/routers/events.py` — POST/GET /events/, GET /events/sessions, WS /ws/events (ConnectionManager for broadcasts)
 - `backend/app/routers/commands.py` — GET /commands/launch
 - `backend/app/config.py` — LAUNCH_PAD_URL env var
 - `ui/src/App.jsx` — root component, settings state
-- `ui/src/components/Dashboard.jsx` — telemetry charts + event table + polling
+- `ui/src/components/Dashboard.jsx` — telemetry charts + event table + WebSocket connection
 - `ui/src/components/SettingsModal.jsx` — air pressure reference input
 - `ui/src/components/LaunchButton.jsx` — launch with confirmation modal
 - `ui/vite.config.js` — dev proxy config
