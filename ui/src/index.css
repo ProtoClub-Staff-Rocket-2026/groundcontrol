@@ -67,6 +67,28 @@ button:hover { background: #333; }
 
 .launch-btn:hover { background: #dc2626; }
 
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.chart-card h3 {
+  font-size: 0.9rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
