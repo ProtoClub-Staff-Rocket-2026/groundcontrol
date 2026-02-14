@@ -38,7 +38,8 @@ Runs on http://localhost:5173. The Vite dev server proxies `/api` requests to `l
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/events/` | Create a telemetry event (returns 204) |
-| GET | `/events/` | Get 50 newest events |
+| GET | `/events/` | Get 50 newest events (optional `?identifier=` filter) |
+| GET | `/events/sessions` | List distinct session identifiers |
 | GET | `/commands/launch` | Send launch signal to launch pad |
 
 ### Example: Post a test event

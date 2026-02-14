@@ -149,6 +149,40 @@ body {
   padding: 0.75rem;
 }
 
+/* ── Session Selector ── */
+
+.session-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.session-label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.session-select {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.6rem;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.session-select:focus {
+  border-color: var(--accent-blue);
+}
+
 /* ── Charts ── */
 
 .charts {

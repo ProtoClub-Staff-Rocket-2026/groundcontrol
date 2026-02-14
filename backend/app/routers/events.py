@@ -16,6 +16,22 @@ def create_event(event: DataEventCreate, session: Session = Depends(get_session)
 
 
 @router.get("/events/", response_model=list[DataEventRead])
-def get_events(session: Session = Depends(get_session)):
-    statement = select(DataEvent).order_by(DataEvent.save_datetime.desc()).limit(50)
+def get_events(
+    identifier: str | None = None,
+    session: Session = Depends(get_session),
+):
+    statement = select(DataEvent)
+    if identifier:
+        statement = statement.where(DataEvent.identifier == identifier)
+    statement = statement.order_by(DataEvent.save_datetime.desc()).limit(50)
+    return session.exec(statement).all()
+
+
+@router.get("/events/sessions", response_model=list[str])
+def get_sessions(session: Session = Depends(get_session)):
+    statement = (
+        select(DataEvent.identifier)
+        .distinct()
+        .order_by(DataEvent.save_datetime.desc())
+    )
     return session.exec(statement).all()

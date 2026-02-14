@@ -34,7 +34,9 @@ docker compose up --build                  # UI on :80, backend on :8000
 ## Architecture
 
 - Backend routes have NO `/api` prefix — the proxy layer (Vite dev / nginx prod) strips `/api` before forwarding
-- Frontend polls `GET /events/` every 2 seconds
+- Frontend polls `GET /events/?identifier=` every 2 seconds, filtered by selected session
+- `GET /events/sessions` returns distinct identifiers; frontend polls this every 5 seconds
+- Dashboard auto-selects the latest session, with a dropdown to switch
 - `POST /events/` returns 204 (no body)
 - `GET /commands/launch` proxies to external `LAUNCH_PAD_URL` via httpx
 - SQLite database file: `backend/data.db` (auto-created on startup)
@@ -56,7 +58,7 @@ docker compose up --build                  # UI on :80, backend on :8000
 
 - `backend/app/main.py` — FastAPI app, CORS, lifespan (table creation)
 - `backend/app/models.py` — DataEvent SQLModel
-- `backend/app/routers/events.py` — POST/GET /events/
+- `backend/app/routers/events.py` — POST/GET /events/, GET /events/sessions
 - `backend/app/routers/commands.py` — GET /commands/launch
 - `backend/app/config.py` — LAUNCH_PAD_URL env var
 - `ui/src/App.jsx` — root component, settings state

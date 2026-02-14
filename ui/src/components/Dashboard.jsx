@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { fetchEvents } from '../api'
+import { fetchEvents, fetchSessions } from '../api'
 
 const BAROMETRIC_SCALE_HEIGHT = 8500
 
@@ -86,12 +86,34 @@ function TelemetryChart({ label, dataKey, data, color, glow, unit, latestValue }
 
 export default function Dashboard({ referencePressure }) {
   const [events, setEvents] = useState([])
+  const [sessions, setSessions] = useState([])
+  const [selectedSession, setSelectedSession] = useState(null)
   const [error, setError] = useState(null)
   const prevCountRef = useRef(0)
 
+  // Fetch available sessions
   useEffect(() => {
+    const pollSessions = () => {
+      fetchSessions()
+        .then((data) => {
+          setSessions(data)
+          setSelectedSession((prev) => {
+            if (prev && data.includes(prev)) return prev
+            return data[0] || null
+          })
+        })
+        .catch(() => {})
+    }
+    pollSessions()
+    const id = setInterval(pollSessions, 5000)
+    return () => clearInterval(id)
+  }, [])
+
+  // Fetch events for selected session
+  useEffect(() => {
+    if (selectedSession === null) return
     const poll = () => {
-      fetchEvents()
+      fetchEvents(selectedSession)
         .then((data) => {
           setEvents(data)
           setError(null)
@@ -101,12 +123,12 @@ export default function Dashboard({ referencePressure }) {
     poll()
     const id = setInterval(poll, 2000)
     return () => clearInterval(id)
-  }, [])
+  }, [selectedSession])
 
   const showAltitude = referencePressure > 0
 
   const chartData = useMemo(() => {
-    return [...events].reverse().map((e, i) => ({
+    return [...events].reverse().map((e) => ({
       label: e.timestamp,
       velocity: e.velocity,
       air_pressure: e.air_pressure,
@@ -125,6 +147,20 @@ export default function Dashboard({ referencePressure }) {
   return (
     <div>
       {error && <div className="error-bar">Connection error: {error}</div>}
+
+      <div className="session-bar">
+        <span className="session-label">Session</span>
+        <select
+          className="session-select"
+          value={selectedSession || ''}
+          onChange={(e) => setSelectedSession(e.target.value)}
+        >
+          {sessions.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+          {sessions.length === 0 && <option value="">No sessions</option>}
+        </select>
+      </div>
 
       {chartData.length > 0 && (
         <div className="charts">
@@ -153,7 +189,6 @@ export default function Dashboard({ referencePressure }) {
             <thead>
               <tr>
                 <th>Timestamp</th>
-                <th>Session</th>
                 <th>Velocity</th>
                 <th>Pressure</th>
                 {showAltitude && <th>Altitude</th>}
@@ -169,7 +204,6 @@ export default function Dashboard({ referencePressure }) {
                 return (
                   <tr key={e.id} className={isNew ? 'row-new' : ''}>
                     <td className="mono-val">{e.timestamp}</td>
-                    <td>{e.identifier}</td>
                     <td className="mono-val">{e.velocity.toFixed(2)}</td>
                     <td className="mono-val">{e.air_pressure.toFixed(2)}</td>
                     {showAltitude && (
