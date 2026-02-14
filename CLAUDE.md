@@ -7,7 +7,7 @@ Rocket ground station dashboard: FastAPI backend + React frontend + Docker Compo
 ## Tech Stack
 
 - **Backend**: Python, FastAPI, SQLModel, SQLite, uv (package manager)
-- **Frontend**: React (JSX), Vite, npm
+- **Frontend**: React (JSX), Vite, Recharts, npm
 - **Production**: Docker Compose, nginx reverse proxy
 
 ## Commands
@@ -40,6 +40,18 @@ docker compose up --build                  # UI on :80, backend on :8000
 - SQLite database file: `backend/data.db` (auto-created on startup)
 - Air pressure reference value stored in browser localStorage, used for barometric altitude calculation
 
+## UI Design
+
+- Mission control aesthetic: dark navy-black palette, scanline texture background
+- Fonts: IBM Plex Mono (data/body), Chakra Petch (headings/labels) via Google Fonts
+- Charts: Recharts area charts with gradient fills, live latest value in chart header
+- Launch button opens a confirmation modal (not window.confirm)
+- CSS custom properties in :root for all colors/fonts
+
+## Tools
+
+- `tools/simulate.py` — simulates a rocket launch, sends telemetry events every 0.5s (requires backend running)
+
 ## Key Files
 
 - `backend/app/main.py` — FastAPI app, CORS, lifespan (table creation)
@@ -48,8 +60,8 @@ docker compose up --build                  # UI on :80, backend on :8000
 - `backend/app/routers/commands.py` — GET /commands/launch
 - `backend/app/config.py` — LAUNCH_PAD_URL env var
 - `ui/src/App.jsx` — root component, settings state
-- `ui/src/components/Dashboard.jsx` — event table + polling
+- `ui/src/components/Dashboard.jsx` — telemetry charts + event table + polling
 - `ui/src/components/SettingsModal.jsx` — air pressure reference input
-- `ui/src/components/LaunchButton.jsx` — launch with confirmation
+- `ui/src/components/LaunchButton.jsx` — launch with confirmation modal
 - `ui/vite.config.js` — dev proxy config
 - `ui/nginx.conf` — production proxy config
