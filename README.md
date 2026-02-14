@@ -7,6 +7,7 @@ Ground station dashboard for monitoring rocket telemetry and triggering launch. 
 ```
 backend/        Python FastAPI REST API (uv)
 ui/             React frontend (Vite, npm)
+tools/          Development and testing utilities
 docker-compose.yml
 ```
 
@@ -47,6 +48,18 @@ curl -X POST http://localhost:8000/events/ \
   -H "Content-Type: application/json" \
   -d '{"timestamp":"t1","identifier":"session1","velocity":12.4,"air_pressure":100.2}'
 ```
+
+## Tools
+
+### simulate.py
+
+Simulates a rocket launch by sending telemetry events to the backend every 0.5s. Velocity ramps up and air pressure drops as altitude increases.
+
+```bash
+python tools/simulate.py
+```
+
+Requires the backend to be running. Set the air pressure reference to `1013.25` in the UI settings to see altitude calculations.
 
 ## Production
 
